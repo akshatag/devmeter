@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NEON_URL")
+}
+
+model User {
+  githubId   String   @id
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  username   String
+  avatarUrl  String?
+  name       String?
+  email      String?
+  
+  metrics    UserMetrics?
+}
+
+model UserMetrics {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastCalculated DateTime @default(now())
+  
+  // User relationship
+  userGithubId  String   @unique
+  user          User     @relation(fields: [userGithubId], references: [githubId])
+  
+  // Core metrics
+  commitFrequency     Float?
+  linesOfCodeAdded    Int?
+  linesOfCodeDeleted  Int?
+  averageCommitSize   Float?
+  
+  // Time-based metrics
+  dailyActiveHours    Float?
+  weeklyActiveHours   Float?
+  weekendActivity     Float?
+  
+  // Collaboration metrics
+  pullRequestsCreated Int?
+  pullRequestsReviewed Int?
+  averageReviewTime   Float?
+  
+  // Quality metrics
+  testCoverage        Float?
+  bugFixRate          Float?
+  
+  // Metadata for calculations
+  repositoriesAnalyzed String[]  // Array of repository names that were analyzed
+  dateRangeStart      DateTime?
+  dateRangeEnd        DateTime?
+}

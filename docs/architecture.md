@@ -16,7 +16,7 @@ DevMeter follows a microservices architecture with the following components:
 
 ### Infrastructure
 - **Hosting**: Vercel
-- **Database**: MongoDB
+- **Database**: Neon
 
 ### Backend
 - **API Framework**: Next.js

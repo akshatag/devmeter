@@ -1,7 +1,48 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { GitHubUserData, UserMetricsData } from "@/types/github";
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState<GitHubUserData | null>(null);
+  const [metricsData, setMetricsData] = useState<UserMetricsData | null>(null);
+  const [error, setError] = useState("");
+  
+  // Function to fetch GitHub data from our API endpoints
+  async function fetchGitHubData() {
+    setLoading(true);
+    setError("");
+    
+    try {
+      // Fetch user data first
+      const userResponse = await fetch('/api/github/user');
+      const userData = await userResponse.json();
+      
+      if (!userData.success) {
+        throw new Error(userData.message || 'Failed to fetch user data');
+      }
+      
+      setUserData(userData.user);
+      
+      // Then fetch metrics data
+      const metricsResponse = await fetch('/api/github/metrics');
+      const metricsData = await metricsResponse.json();
+      
+      if (!metricsData.success) {
+        throw new Error(metricsData.message || 'Failed to fetch metrics data');
+      }
+      
+      setMetricsData(metricsData.metrics);
+    } catch (err) {
+      console.error('Error fetching GitHub data:', err);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -55,9 +96,75 @@ export default function Home() {
             </a>
           </Button>
           
-          <Button variant="secondary" className="mt-2 sm:mt-0">
-            DevMeter Button
+          <Button 
+            variant="secondary" 
+            className="mt-2 sm:mt-0"
+            onClick={fetchGitHubData}
+            disabled={loading}
+          >
+            {loading ? "Loading..." : "Fetch GitHub Data"}
           </Button>
+          
+          {/* Display results */}
+          {(userData || metricsData) && (
+            <div className="mt-8 w-full max-w-3xl p-6 border rounded-lg bg-card text-card-foreground shadow-sm">
+              <h2 className="text-2xl font-bold mb-4">GitHub Data</h2>
+              
+              {userData && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-2">User Profile</h3>
+                  <div className="flex items-center gap-4 mb-4">
+                    {userData.avatarUrl && (
+                      <Image 
+                        src={userData.avatarUrl} 
+                        alt={`${userData.username}'s avatar`} 
+                        width={64} 
+                        height={64} 
+                        className="rounded-full"
+                      />
+                    )}
+                    <div>
+                      <p className="font-medium">{userData.name || userData.username}</p>
+                      <p className="text-sm text-muted-foreground">@{userData.username}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {metricsData && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Metrics</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-md">
+                      <p className="text-sm font-medium text-muted-foreground">Commit Frequency</p>
+                      <p className="text-2xl font-bold">{metricsData.commitFrequency}</p>
+                    </div>
+                    <div className="p-4 border rounded-md">
+                      <p className="text-sm font-medium text-muted-foreground">Lines Added</p>
+                      <p className="text-2xl font-bold">{metricsData.linesOfCodeAdded}</p>
+                    </div>
+                    <div className="p-4 border rounded-md">
+                      <p className="text-sm font-medium text-muted-foreground">Lines Deleted</p>
+                      <p className="text-2xl font-bold">{metricsData.linesOfCodeDeleted}</p>
+                    </div>
+                    <div className="p-4 border rounded-md">
+                      <p className="text-sm font-medium text-muted-foreground">Avg. Commit Size</p>
+                      <p className="text-2xl font-bold">{metricsData.averageCommitSize.toFixed(0)}</p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Based on {metricsData.repositoriesAnalyzed.length} repositories analyzed
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {error && (
+            <div className="mt-4 p-4 border border-red-200 bg-red-50 text-red-800 rounded-md">
+              {error}
+            </div>
+          )}
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">

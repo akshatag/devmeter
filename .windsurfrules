@@ -1,0 +1,5 @@
+# General (ALWAYS FOLLOW)
+- You should always plan out your implementation using the markdown files in the `docs` directory.
+- The docs are organized in a hierarchical manner, with epics, stories, and tasks. Each epic contains multiple stories which each  are broken down to specific tasks. 
+- Do each task one at a time and make sure to update the markdown file that corresponds to the task you are working on. 
+- If there is no implementation plan for the feature requested, ask for it. 
