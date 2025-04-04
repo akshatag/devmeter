@@ -27,4 +27,16 @@ export type UserMetricsData = {
   reviewCount?: number;
   accountAgeInYears?: number;
   seniorityScore?: number;
+  
+  // Versatility metrics
+  languageDiversity?: number;
+  contributionTypeDiversity?: number;
+  repositoryDiversity?: number;
+  versatilityScore?: number;
+  languages?: string[];
+  
+  // Productivity metrics
+  contributionFrequency?: number;
+  activeDays?: number;
+  productivityScore?: number;
 };

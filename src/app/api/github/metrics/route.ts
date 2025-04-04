@@ -70,6 +70,15 @@ type GitHubGraphQLResponse = {
           totalCount: number;
         };
       }>;
+      contributionCalendar: {
+        totalContributions: number;
+        weeks: Array<{
+          contributionDays: Array<{
+            date: string;
+            contributionCount: number;
+          }>;
+        }>;
+      };
     };
   };
 };
@@ -216,6 +225,56 @@ function calculateVersatilityScore(result: GitHubGraphQLResponse): {
   };
 }
 
+/**
+ * Calculate productivity score based on GitHub contribution calendar data
+ * 
+ * @param result - GitHub GraphQL response data containing contribution calendar
+ * @returns Object containing productivity metrics and final score
+ */
+function calculateProductivityScore(result: GitHubGraphQLResponse): {
+  contributionFrequency: number;
+  activeDays: number;
+  productivityScore: number;
+} {
+  // Default values if contribution calendar data is missing
+  let contributionFrequency = 0;
+  let activeDays = 0;
+  
+  // Check if we have contribution calendar data
+  if (result.user.contributionsCollection.contributionCalendar) {
+    const calendar = result.user.contributionsCollection.contributionCalendar;
+    
+    // 1. Calculate total contributions in the last year
+    const totalContributions = calendar.totalContributions;
+    
+    // 2. Calculate contribution frequency (contributions per week)
+    // There are 52 weeks in a year
+    contributionFrequency = totalContributions / 52;
+    
+    // 3. Calculate active days (days with at least one contribution)
+    const allDays = calendar.weeks.flatMap(week => week.contributionDays);
+    activeDays = allDays.filter(day => day.contributionCount > 0).length;
+  }
+  
+  // 4. Calculate productivity score
+  // Normalize contribution frequency to 15 and multiply by 50
+  const normalizedContributionFrequency = Math.min(contributionFrequency / 15, 1) * 50;
+  
+  // Normalize active days to 365 and multiply by 50
+  const normalizedActiveDays = Math.min(activeDays / 365, 1) * 50;
+  
+  // Calculate final score and round to nearest integer
+  const productivityScore = Math.round(
+    normalizedContributionFrequency + normalizedActiveDays
+  );
+  
+  return {
+    contributionFrequency,
+    activeDays,
+    productivityScore
+  };
+}
+
 export async function GET() {
   try {
     // For demo purposes, we'll use a fixed GitHub username
@@ -279,15 +338,22 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
         commitContributionsByRepository: [],
         pullRequestContributionsByRepository: [],
         pullRequestReviewContributionsByRepository: [],
-        issueContributionsByRepository: []
+        issueContributionsByRepository: [],
+        contributionCalendar: {
+          totalContributions: 0,
+          weeks: []
+        }
       }
     }
   };
   
   try {
     // Using GraphQL to get data for seniority and versatility metrics
+    // Calculate date from 1 year ago for the contribution calendar
+    const fromDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    
     result = await graphqlWithAuth<GitHubGraphQLResponse>(`
-      query ($username: String!) {
+      query ($username: String!, $fromDate: DateTime!) {
         # Get PRs authored by the user
         pullRequests: search(query: "author:$username type:pr", type: ISSUE, first: 1) {
           issueCount
@@ -326,8 +392,8 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
               }
             }
           }
-          # Get contribution data by repository and type
-          contributionsCollection {
+          # Get contribution data by repository and type for the past year
+          contributionsCollection(from: $fromDate) {
             # Commit contributions by repository
             commitContributionsByRepository(maxRepositories: 100) {
               repository {
@@ -367,11 +433,22 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
                 totalCount
               }
             }
+            # Contribution calendar for productivity metrics
+            contributionCalendar {
+              totalContributions
+              weeks {
+                contributionDays {
+                  date
+                  contributionCount
+                }
+              }
+            }
           }
         }
       }
     `, {
-      username: username
+      username: username,
+      fromDate: fromDate
     });
     
     pullRequestCount = result.pullRequests.issueCount;
@@ -424,6 +501,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
 
   // The userGithubId will be provided by the calling function and passed to storeUserMetrics
   // We're just returning the calculated metrics here
+  // Calculate productivity metrics using the dedicated function
+  const productivityMetrics = calculateProductivityScore(result);
+
   return {
     userGithubId: userProfile.id.toString(), // Add the userGithubId from the user profile
     commitFrequency: commitFrequency,
@@ -431,7 +511,7 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     linesOfCodeDeleted: linesDeleted,
     averageCommitSize: linesAdded > 0 && commitFrequency > 0 ? linesAdded / commitFrequency : 0,
     repositoriesAnalyzed: repos.map((repo: { name: string }) => repo.name),
-    dateRangeStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    dateRangeStart: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000), // 1 year ago
     dateRangeEnd: new Date(),
     // Seniority metrics
     reviewToPRRatio: reviewToPRRatio,
@@ -444,5 +524,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     repositoryDiversity: versatilityMetrics.repositoryDiversity,
     versatilityScore: versatilityMetrics.versatilityScore,
     languages: versatilityMetrics.languages,
+    // Productivity metrics
+    contributionFrequency: productivityMetrics.contributionFrequency,
+    activeDays: productivityMetrics.activeDays,
+    productivityScore: productivityMetrics.productivityScore,
   };
 }

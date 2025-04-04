@@ -54,6 +54,16 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       reviewCount: metrics.reviewCount,
       accountAgeInYears: metrics.accountAgeInYears,
       seniorityScore: metrics.seniorityScore,
+      // Versatility metrics
+      languageDiversity: metrics.languageDiversity,
+      contributionTypeDiversity: metrics.contributionTypeDiversity,
+      repositoryDiversity: metrics.repositoryDiversity,
+      versatilityScore: metrics.versatilityScore,
+      languages: metrics.languages || [],
+      // Productivity metrics
+      contributionFrequency: metrics.contributionFrequency,
+      activeDays: metrics.activeDays,
+      productivityScore: metrics.productivityScore,
     },
     create: {
       userGithubId,
@@ -70,6 +80,16 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       reviewCount: metrics.reviewCount,
       accountAgeInYears: metrics.accountAgeInYears,
       seniorityScore: metrics.seniorityScore,
+      // Versatility metrics
+      languageDiversity: metrics.languageDiversity,
+      contributionTypeDiversity: metrics.contributionTypeDiversity,
+      repositoryDiversity: metrics.repositoryDiversity,
+      versatilityScore: metrics.versatilityScore,
+      languages: metrics.languages || [],
+      // Productivity metrics
+      contributionFrequency: metrics.contributionFrequency,
+      activeDays: metrics.activeDays,
+      productivityScore: metrics.productivityScore,
     },
   });
 }

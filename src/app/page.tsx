@@ -160,6 +160,62 @@ export default function Home() {
                     </div>
                   </div>
                   
+                  {/* Versatility Metrics Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold mb-2">Versatility Score</h4>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-green-600 h-4 rounded-full" 
+                        style={{ width: `${metricsData.versatilityScore || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Language Diversity</p>
+                        <p className="text-2xl font-bold">{(metricsData.languageDiversity || 0).toFixed(2)}</p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Contribution Type Diversity</p>
+                        <p className="text-2xl font-bold">{(metricsData.contributionTypeDiversity || 0).toFixed(2)}</p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Repository Diversity</p>
+                        <p className="text-2xl font-bold">{(metricsData.repositoryDiversity || 0).toFixed(2)}</p>
+                      </div>
+                    </div>
+                    {metricsData.languages && metricsData.languages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Languages Used:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {metricsData.languages.map((lang, index) => (
+                            <span key={index} className="px-2 py-1 bg-gray-100 text-xs rounded-md">{lang}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Productivity Metrics Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold mb-2">Productivity Score</h4>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-purple-600 h-4 rounded-full" 
+                        style={{ width: `${metricsData.productivityScore || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Contribution Frequency</p>
+                        <p className="text-2xl font-bold">{(metricsData.contributionFrequency || 0).toFixed(1)}<span className="text-sm ml-1">per week</span></p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Active Days</p>
+                        <p className="text-2xl font-bold">{metricsData.activeDays || 0}<span className="text-sm ml-1">days</span></p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   {/* Activity Metrics Section */}
                   <h4 className="text-lg font-semibold mb-2">Activity Metrics</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

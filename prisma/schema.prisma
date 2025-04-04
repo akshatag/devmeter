@@ -62,6 +62,18 @@ model UserMetrics {
   accountAgeInYears   Float?
   seniorityScore      Int?
   
+  // Versatility metrics
+  languageDiversity           Float?
+  contributionTypeDiversity   Float?
+  repositoryDiversity         Float?
+  versatilityScore            Int?
+  languages                   String[]
+  
+  // Productivity metrics
+  contributionFrequency       Float?
+  activeDays                  Int?
+  productivityScore           Int?
+  
   // Metadata for calculations
   repositoriesAnalyzed String[]  // Array of repository names that were analyzed
   dateRangeStart      DateTime?
