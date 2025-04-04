@@ -17,10 +17,92 @@ type GitHubGraphQLResponse = {
         owner: {
           login: string;
         };
+        languages: {
+          edges: Array<{
+            size: number;
+            node: {
+              name: string;
+            };
+          }>;
+        };
+        defaultBranchRef: {
+          target: {
+            history: {
+              totalCount: number;
+            };
+          };
+        };
+      }>;
+    };
+    contributionsCollection: {
+      commitContributionsByRepository: Array<{
+        repository: {
+          name: string;
+          primaryLanguage: {
+            name: string;
+          } | null;
+        };
+        contributions: {
+          totalCount: number;
+        };
+      }>;
+      pullRequestContributionsByRepository: Array<{
+        repository: {
+          name: string;
+        };
+        contributions: {
+          totalCount: number;
+        };
+      }>;
+      pullRequestReviewContributionsByRepository: Array<{
+        repository: {
+          name: string;
+        };
+        contributions: {
+          totalCount: number;
+        };
+      }>;
+      issueContributionsByRepository: Array<{
+        repository: {
+          name: string;
+        };
+        contributions: {
+          totalCount: number;
+        };
       }>;
     };
   };
 };
+
+/**
+ * Calculate Shannon diversity index for a set of counts
+ * 
+ * @param counts - Array of counts for each category
+ * @returns Shannon diversity index value between 0-1
+ */
+function calculateShannonDiversityIndex(counts: number[]): number {
+  // Return 0 if there are no counts or only one category
+  if (!counts.length || counts.every(count => count === 0)) {
+    return 0;
+  }
+  
+  // Calculate total count
+  const totalCount = counts.reduce((sum, count) => sum + count, 0);
+  
+  // Calculate Shannon entropy
+  const shannonEntropy = counts
+    .filter(count => count > 0) // Ignore categories with zero count
+    .reduce((entropy, count) => {
+      const proportion = count / totalCount;
+      return entropy - proportion * Math.log(proportion);
+    }, 0);
+  
+  // Calculate maximum possible entropy (when all categories are equally represented)
+  const maxEntropy = Math.log(counts.filter(count => count > 0).length);
+  
+  // Return normalized entropy (between 0 and 1)
+  return maxEntropy > 0 ? shannonEntropy / maxEntropy : 0;
+}
 
 /**
  * Calculate seniority score based on GitHub metrics
@@ -48,6 +130,90 @@ function calculateSeniorityScore(
   return Math.round(
     normalizedReviewToPRRatio + normalizedReviewCount + normalizedAccountAge
   );
+}
+
+/**
+ * Calculate versatility score based on GitHub metrics
+ * 
+ * @param result - GitHub GraphQL response data
+ * @returns Object containing versatility metrics and final score
+ */
+function calculateVersatilityScore(result: GitHubGraphQLResponse): {
+  languageDiversity: number;
+  contributionTypeDiversity: number;
+  repositoryDiversity: number;
+  versatilityScore: number;
+  languages: string[];
+} {
+  // 1. Calculate language diversity
+  const languageCounts = new Map<string, number>();
+  
+  // Count languages from commit contributions only
+  result.user.contributionsCollection.commitContributionsByRepository.forEach(contribution => {
+    if (contribution.repository.primaryLanguage?.name) {
+      const language = contribution.repository.primaryLanguage.name;
+      const count = contribution.contributions.totalCount;
+      languageCounts.set(language, (languageCounts.get(language) || 0) + count);
+    }
+  });
+  
+  // Get unique languages and normalize language diversity to 10
+  const uniqueLanguages = Array.from(languageCounts.keys());
+  const languageDiversity = Math.min(uniqueLanguages.length / 10, 1);
+  
+  // 2. Calculate contribution type diversity using Shannon index
+  const commitCount = result.user.contributionsCollection.commitContributionsByRepository
+    .reduce((sum, repo) => sum + repo.contributions.totalCount, 0);
+  
+  const prCount = result.user.contributionsCollection.pullRequestContributionsByRepository
+    .reduce((sum, repo) => sum + repo.contributions.totalCount, 0);
+  
+  const reviewCount = result.user.contributionsCollection.pullRequestReviewContributionsByRepository
+    .reduce((sum, repo) => sum + repo.contributions.totalCount, 0);
+  
+  const issueCount = result.user.contributionsCollection.issueContributionsByRepository
+    .reduce((sum, repo) => sum + repo.contributions.totalCount, 0);
+  
+  const contributionTypeCounts = [commitCount, prCount, reviewCount, issueCount];
+  const contributionTypeDiversity = calculateShannonDiversityIndex(contributionTypeCounts);
+  
+  // 3. Calculate repository diversity using Shannon index
+  const repoContributionCounts = new Map<string, number>();
+  
+  // Count PR contributions by repository only (as per spec)
+  result.user.contributionsCollection.pullRequestContributionsByRepository.forEach(contribution => {
+    const repoName = contribution.repository.name;
+    const count = contribution.contributions.totalCount;
+    repoContributionCounts.set(repoName, (repoContributionCounts.get(repoName) || 0) + count);
+  });
+  
+  const repositoryContributionCounts = Array.from(repoContributionCounts.values());
+  const repositoryDiversity = calculateShannonDiversityIndex(repositoryContributionCounts);
+  
+  // 4. Calculate final versatility score
+  // Normalize language diversity to 10 and multiply by 40
+  const normalizedLanguageDiversity = languageDiversity * 40;
+  
+  // Multiply contribution type diversity by 30
+  const normalizedContributionTypeDiversity = contributionTypeDiversity * 30;
+  
+  // Multiply repository diversity by 30
+  const normalizedRepositoryDiversity = repositoryDiversity * 30;
+  
+  // Calculate final score and round to nearest integer
+  const versatilityScore = Math.round(
+    normalizedLanguageDiversity + 
+    normalizedContributionTypeDiversity + 
+    normalizedRepositoryDiversity
+  );
+  
+  return {
+    languageDiversity,
+    contributionTypeDiversity,
+    repositoryDiversity,
+    versatilityScore,
+    languages: uniqueLanguages
+  };
 }
 
 export async function GET() {
@@ -108,12 +274,18 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
       repositories: { 
         totalCount: 0,
         nodes: []
-      } 
+      },
+      contributionsCollection: {
+        commitContributionsByRepository: [],
+        pullRequestContributionsByRepository: [],
+        pullRequestReviewContributionsByRepository: [],
+        issueContributionsByRepository: []
+      }
     }
   };
   
   try {
-    // Using GraphQL to get both PR count and review count in a single query
+    // Using GraphQL to get data for seniority and versatility metrics
     result = await graphqlWithAuth<GitHubGraphQLResponse>(`
       query ($username: String!) {
         # Get PRs authored by the user
@@ -124,14 +296,75 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
         reviews: search(query: "reviewed-by:$username type:pr", type: ISSUE, first: 1) {
           issueCount
         }
-        # Get user data including repositories
+        # Get user data including repositories and contributions
         user(login: $username) {
-          repositories(first: 100) {
+          repositories(first: 100, ownerAffiliations: [OWNER, COLLABORATOR]) {
             totalCount
             nodes {
               name
               owner {
                 login
+              }
+              # Get languages used in each repository
+              languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+                edges {
+                  size
+                  node {
+                    name
+                  }
+                }
+              }
+              # Get commit count for each repository
+              defaultBranchRef {
+                target {
+                  ... on Commit {
+                    history {
+                      totalCount
+                    }
+                  }
+                }
+              }
+            }
+          }
+          # Get contribution data by repository and type
+          contributionsCollection {
+            # Commit contributions by repository
+            commitContributionsByRepository(maxRepositories: 100) {
+              repository {
+                name
+                primaryLanguage {
+                  name
+                }
+              }
+              contributions {
+                totalCount
+              }
+            }
+            # PR contributions by repository
+            pullRequestContributionsByRepository(maxRepositories: 100) {
+              repository {
+                name
+              }
+              contributions {
+                totalCount
+              }
+            }
+            # Review contributions by repository
+            pullRequestReviewContributionsByRepository(maxRepositories: 100) {
+              repository {
+                name
+              }
+              contributions {
+                totalCount
+              }
+            }
+            # Issue contributions by repository
+            issueContributionsByRepository(maxRepositories: 100) {
+              repository {
+                name
+              }
+              contributions {
+                totalCount
               }
             }
           }
@@ -154,6 +387,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
 
   // Calculate seniority score using the dedicated function
   const seniorityScore = calculateSeniorityScore(reviewToPRRatio, reviewCount, accountAgeInYears);
+  
+  // Calculate versatility metrics using the dedicated function
+  const versatilityMetrics = calculateVersatilityScore(result);
 
   // Get commit activity for the first repo (as an example)
   let commitFrequency = 0;
@@ -202,5 +438,11 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     reviewCount: reviewCount,
     accountAgeInYears: accountAgeInYears,
     seniorityScore: seniorityScore,
+    // Versatility metrics
+    languageDiversity: versatilityMetrics.languageDiversity,
+    contributionTypeDiversity: versatilityMetrics.contributionTypeDiversity,
+    repositoryDiversity: versatilityMetrics.repositoryDiversity,
+    versatilityScore: versatilityMetrics.versatilityScore,
+    languages: versatilityMetrics.languages,
   };
 }
