@@ -64,6 +64,10 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       contributionFrequency: metrics.contributionFrequency,
       activeDays: metrics.activeDays,
       productivityScore: metrics.productivityScore,
+      // Code Quality metrics
+      prMergeRatio: metrics.prMergeRatio,
+      prRevisions: metrics.prRevisions,
+      codeQualityScore: metrics.codeQualityScore,
     },
     create: {
       userGithubId,
@@ -90,6 +94,10 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       contributionFrequency: metrics.contributionFrequency,
       activeDays: metrics.activeDays,
       productivityScore: metrics.productivityScore,
+      // Code Quality metrics
+      prMergeRatio: metrics.prMergeRatio,
+      prRevisions: metrics.prRevisions,
+      codeQualityScore: metrics.codeQualityScore,
     },
   });
 }

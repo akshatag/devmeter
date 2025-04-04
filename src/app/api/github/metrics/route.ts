@@ -6,6 +6,9 @@ type GitHubGraphQLResponse = {
   pullRequests: {
     issueCount: number;
   };
+  mergedPullRequests: {
+    issueCount: number;
+  };
   reviews: {
     issueCount: number;
   };
@@ -252,8 +255,8 @@ function calculateProductivityScore(result: GitHubGraphQLResponse): {
     contributionFrequency = totalContributions / 52;
     
     // 3. Calculate active days (days with at least one contribution)
-    const allDays = calendar.weeks.flatMap(week => week.contributionDays);
-    activeDays = allDays.filter(day => day.contributionCount > 0).length;
+    const allDays = calendar.weeks.flatMap((week: { contributionDays: Array<{ date: string; contributionCount: number }> }) => week.contributionDays);
+    activeDays = allDays.filter((day: { date: string; contributionCount: number }) => day.contributionCount > 0).length;
   }
   
   // 4. Calculate productivity score
@@ -272,6 +275,43 @@ function calculateProductivityScore(result: GitHubGraphQLResponse): {
     contributionFrequency,
     activeDays,
     productivityScore
+  };
+}
+
+/**
+ * Calculate code quality score based on GitHub pull request metrics
+ * 
+ * @param totalPRs - Total number of pull requests created
+ * @param mergedPRs - Number of pull requests that were merged
+ * @param averagePRRevisions - Average number of revisions per pull request
+ * @returns Object containing code quality metrics and final score
+ */
+function calculateCodeQualityScore(
+  totalPRs: number,
+  mergedPRs: number,
+  averagePRRevisions: number
+): {
+  prMergeRatio: number;
+  prRevisions: number;
+  codeQualityScore: number;
+} {
+  // Calculate PR merge ratio (percentage of opened PRs that were merged)
+  const prMergeRatio = totalPRs > 0 ? mergedPRs / totalPRs : 0;
+  
+  // Calculate normalized PR revisions score
+  // Divide PR revisions by 2, normalize to 1 (lower is better)
+  const normalizedPRRevisions = Math.min(1, 2/averagePRRevisions);
+  
+  // Calculate final code quality score
+  // PR merge ratio * 40 + normalized PR revisions * 60
+  const codeQualityScore = Math.round(
+    (prMergeRatio * 40) + (normalizedPRRevisions * 60)
+  );
+  
+  return {
+    prMergeRatio,
+    prRevisions: averagePRRevisions,
+    codeQualityScore
   };
 }
 
@@ -328,6 +368,7 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
   // Initialize result with default values
   let result: GitHubGraphQLResponse = {
     pullRequests: { issueCount: 0 },
+    mergedPullRequests: { issueCount: 0 },
     reviews: { issueCount: 0 },
     user: { 
       repositories: { 
@@ -356,6 +397,10 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
       query ($username: String!, $fromDate: DateTime!) {
         # Get PRs authored by the user
         pullRequests: search(query: "author:$username type:pr", type: ISSUE, first: 1) {
+          issueCount
+        }
+        # Get merged PRs authored by the user
+        mergedPullRequests: search(query: "author:$username type:pr is:merged", type: ISSUE, first: 1) {
           issueCount
         }
         # Get PRs reviewed by the user
@@ -503,6 +548,15 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
   // We're just returning the calculated metrics here
   // Calculate productivity metrics using the dedicated function
   const productivityMetrics = calculateProductivityScore(result);
+  
+  // Calculate code quality metrics
+  // For PR revisions, we'll use a placeholder value of 1.5 for now
+  // In a real implementation, you would fetch this data from the GitHub API
+  const totalPRs = result.pullRequests.issueCount;
+  const mergedPRs = result.mergedPullRequests.issueCount;
+  const averagePRRevisions = 1.5; // Placeholder - would be calculated from actual PR data
+  
+  const codeQualityMetrics = calculateCodeQualityScore(totalPRs, mergedPRs, averagePRRevisions);
 
   return {
     userGithubId: userProfile.id.toString(), // Add the userGithubId from the user profile
@@ -528,5 +582,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     contributionFrequency: productivityMetrics.contributionFrequency,
     activeDays: productivityMetrics.activeDays,
     productivityScore: productivityMetrics.productivityScore,
+    // Code Quality metrics
+    prMergeRatio: codeQualityMetrics.prMergeRatio,
+    prRevisions: codeQualityMetrics.prRevisions,
+    codeQualityScore: codeQualityMetrics.codeQualityScore,
   };
 }

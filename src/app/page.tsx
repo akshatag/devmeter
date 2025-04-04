@@ -216,6 +216,29 @@ export default function Home() {
                     </div>
                   </div>
                   
+                  {/* Code Quality Metrics Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold mb-2">Code Quality Score</h4>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-amber-600 h-4 rounded-full" 
+                        style={{ width: `${metricsData.codeQualityScore || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">PR Merge Ratio</p>
+                        <p className="text-2xl font-bold">{((metricsData.prMergeRatio || 0) * 100).toFixed(0)}<span className="text-sm ml-1">%</span></p>
+                        <p className="text-xs text-muted-foreground mt-1">Percentage of PRs that were merged</p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">PR Revisions</p>
+                        <p className="text-2xl font-bold">{(metricsData.prRevisions || 0).toFixed(1)}<span className="text-sm ml-1">avg</span></p>
+                        <p className="text-xs text-muted-foreground mt-1">Average revisions per PR</p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   {/* Activity Metrics Section */}
                   <h4 className="text-lg font-semibold mb-2">Activity Metrics</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

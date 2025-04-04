@@ -39,4 +39,9 @@ export type UserMetricsData = {
   contributionFrequency?: number;
   activeDays?: number;
   productivityScore?: number;
+  
+  // Code Quality metrics
+  prMergeRatio?: number;
+  prRevisions?: number;
+  codeQualityScore?: number;
 };

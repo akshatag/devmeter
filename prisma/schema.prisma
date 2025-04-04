@@ -74,6 +74,11 @@ model UserMetrics {
   activeDays                  Int?
   productivityScore           Int?
   
+  // Code Quality metrics
+  prMergeRatio               Float?
+  prRevisions                Float?
+  codeQualityScore           Int?
+  
   // Metadata for calculations
   repositoriesAnalyzed String[]  // Array of repository names that were analyzed
   dateRangeStart      DateTime?
