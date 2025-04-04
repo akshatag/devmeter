@@ -21,4 +21,10 @@ export type UserMetricsData = {
   dateRangeStart: Date | string;
   dateRangeEnd: Date | string;
   lastCalculated?: Date | string;
+  
+  // Seniority metrics
+  reviewToPRRatio?: number;
+  reviewCount?: number;
+  accountAgeInYears?: number;
+  seniorityScore?: number;
 };

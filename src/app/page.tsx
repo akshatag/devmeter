@@ -134,6 +134,34 @@ export default function Home() {
               {metricsData && (
                 <div>
                   <h3 className="text-xl font-semibold mb-2">Metrics</h3>
+                  
+                  {/* Seniority Metrics Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold mb-2">Seniority Score</h4>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-blue-600 h-4 rounded-full" 
+                        style={{ width: `${metricsData.seniorityScore || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Review to PR Ratio</p>
+                        <p className="text-2xl font-bold">{metricsData.reviewToPRRatio?.toFixed(2) || '0.00'}</p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Review Count</p>
+                        <p className="text-2xl font-bold">{metricsData.reviewCount || 0}</p>
+                      </div>
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Account Age (Years)</p>
+                        <p className="text-2xl font-bold">{metricsData.accountAgeInYears?.toFixed(1) || '0.0'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Activity Metrics Section */}
+                  <h4 className="text-lg font-semibold mb-2">Activity Metrics</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 border rounded-md">
                       <p className="text-sm font-medium text-muted-foreground">Commit Frequency</p>

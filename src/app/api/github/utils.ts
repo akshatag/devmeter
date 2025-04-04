@@ -8,6 +8,13 @@ export const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+// Export graphql client for direct GraphQL queries
+export const graphqlWithAuth = octokit.graphql.defaults({
+  headers: {
+    authorization: `token ${process.env.GITHUB_TOKEN}`,
+  },
+});
+
 // Re-export types for convenience
 export type { GitHubUserData, UserMetricsData };
 
@@ -27,25 +34,7 @@ export async function fetchGitHubUserData(username: string): Promise<GitHubUserD
   };
 }
 
-export async function storeUserData(userData: GitHubUserData) {
-  // Upsert user data (create if not exists, update if exists)
-  return prisma.user.upsert({
-    where: { githubId: userData.githubId },
-    update: {
-      username: userData.username,
-      name: userData.name,
-      avatarUrl: userData.avatarUrl,
-      email: userData.email,
-    },
-    create: {
-      githubId: userData.githubId,
-      username: userData.username,
-      name: userData.name,
-      avatarUrl: userData.avatarUrl,
-      email: userData.email,
-    },
-  });
-}
+
 
 export async function storeUserMetrics(userGithubId: string, metrics: UserMetricsData) {
   // Upsert metrics data
@@ -60,6 +49,11 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       repositoriesAnalyzed: metrics.repositoriesAnalyzed,
       dateRangeStart: metrics.dateRangeStart,
       dateRangeEnd: metrics.dateRangeEnd,
+      // Seniority metrics
+      reviewToPRRatio: metrics.reviewToPRRatio,
+      reviewCount: metrics.reviewCount,
+      accountAgeInYears: metrics.accountAgeInYears,
+      seniorityScore: metrics.seniorityScore,
     },
     create: {
       userGithubId,
@@ -71,6 +65,11 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       repositoriesAnalyzed: metrics.repositoriesAnalyzed,
       dateRangeStart: metrics.dateRangeStart,
       dateRangeEnd: metrics.dateRangeEnd,
+      // Seniority metrics
+      reviewToPRRatio: metrics.reviewToPRRatio,
+      reviewCount: metrics.reviewCount,
+      accountAgeInYears: metrics.accountAgeInYears,
+      seniorityScore: metrics.seniorityScore,
     },
   });
 }

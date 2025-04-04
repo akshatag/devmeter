@@ -1,5 +1,35 @@
 import { NextResponse } from 'next/server';
-import { fetchGitHubUserData, storeUserData } from '../utils';
+import { fetchGitHubUserData } from '../utils';
+import { PrismaClient } from '@prisma/client';
+import { GitHubUserData } from '@/types/github';
+
+const prisma = new PrismaClient();
+
+/**
+ * Store user data in the database
+ * 
+ * @param userData GitHub user data to store
+ * @returns The stored user record
+ */
+async function storeUserData(userData: GitHubUserData) {
+  // Upsert user data (create if not exists, update if exists)
+  return prisma.user.upsert({
+    where: { githubId: userData.githubId },
+    update: {
+      username: userData.username,
+      name: userData.name,
+      avatarUrl: userData.avatarUrl,
+      email: userData.email,
+    },
+    create: {
+      githubId: userData.githubId,
+      username: userData.username,
+      name: userData.name,
+      avatarUrl: userData.avatarUrl,
+      email: userData.email,
+    },
+  });
+}
 
 export async function GET() {
   try {

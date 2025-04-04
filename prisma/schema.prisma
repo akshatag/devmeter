@@ -55,6 +55,12 @@ model UserMetrics {
   // Quality metrics
   testCoverage        Float?
   bugFixRate          Float?
+
+  // Seniority metrics
+  reviewToPRRatio     Float?
+  reviewCount         Int?
+  accountAgeInYears   Float?
+  seniorityScore      Int?
   
   // Metadata for calculations
   repositoriesAnalyzed String[]  // Array of repository names that were analyzed
