@@ -257,8 +257,8 @@ function calculateProductivityScore(result: GitHubGraphQLResponse): {
   }
   
   // 4. Calculate productivity score
-  // Normalize contribution frequency to 15 and multiply by 50
-  const normalizedContributionFrequency = Math.min(contributionFrequency / 15, 1) * 50;
+  // Normalize contribution frequency to 30 and multiply by 50
+  const normalizedContributionFrequency = Math.min(contributionFrequency / 30, 1) * 50;
   
   // Normalize active days to 365 and multiply by 50
   const normalizedActiveDays = Math.min(activeDays / 365, 1) * 50;
