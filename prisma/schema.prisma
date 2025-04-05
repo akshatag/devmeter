@@ -79,6 +79,10 @@ model UserMetrics {
   prRevisions                Float?
   codeQualityScore           Int?
   
+  // Community Impact metrics
+  starCount                  Int?
+  communityImpactScore       Int?
+  
   // Metadata for calculations
   repositoriesAnalyzed String[]  // Array of repository names that were analyzed
   dateRangeStart      DateTime?

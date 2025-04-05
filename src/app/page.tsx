@@ -239,6 +239,24 @@ export default function Home() {
                     </div>
                   </div>
                   
+                  {/* Community Impact Metrics Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold mb-2">Community Impact Score</h4>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className="bg-indigo-600 h-4 rounded-full" 
+                        style={{ width: `${metricsData.communityImpactScore || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+                      <div className="p-4 border rounded-md">
+                        <p className="text-sm font-medium text-muted-foreground">Star Count</p>
+                        <p className="text-2xl font-bold">{metricsData.starCount || 0}<span className="text-sm ml-1">stars</span></p>
+                        <p className="text-xs text-muted-foreground mt-1">Total stars on repositories with contributions</p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   {/* Activity Metrics Section */}
                   <h4 className="text-lg font-semibold mb-2">Activity Metrics</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

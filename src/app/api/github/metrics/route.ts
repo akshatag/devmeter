@@ -20,6 +20,7 @@ type GitHubGraphQLResponse = {
         owner: {
           login: string;
         };
+        stargazerCount: number;
         languages: {
           edges: Array<{
             size: number;
@@ -315,6 +316,31 @@ function calculateCodeQualityScore(
   };
 }
 
+/**
+ * Calculate community impact score based on GitHub repository stars
+ * 
+ * @param repositories - Array of repository objects with star counts
+ * @returns Object containing community impact metrics and final score
+ */
+function calculateCommunityImpactScore(
+  repositories: Array<{ name: string; stargazerCount: number }>
+): {
+  starCount: number;
+  communityImpactScore: number;
+} {
+  // Calculate total star count across all repositories
+  const starCount = repositories.reduce((total, repo) => total + repo.stargazerCount, 0);
+  
+  // Normalize star count to 500 (max value) and multiply by 100 to get score
+  const normalizedStarCount = Math.min(1, starCount / 500);
+  const communityImpactScore = Math.round(normalizedStarCount * 100);
+  
+  return {
+    starCount,
+    communityImpactScore
+  };
+}
+
 export async function GET() {
   try {
     // For demo purposes, we'll use a fixed GitHub username
@@ -416,6 +442,8 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
               owner {
                 login
               }
+              # Get star count for community impact metric
+              stargazerCount
               # Get languages used in each repository
               languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
                 edges {
@@ -557,6 +585,15 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
   const averagePRRevisions = 1.5; // Placeholder - would be calculated from actual PR data
   
   const codeQualityMetrics = calculateCodeQualityScore(totalPRs, mergedPRs, averagePRRevisions);
+  
+  // Calculate community impact metrics
+  // Extract repositories with star counts
+  const reposWithStars = repos.map(repo => ({
+    name: repo.name,
+    stargazerCount: repo.stargazerCount || 0
+  }));
+  
+  const communityImpactMetrics = calculateCommunityImpactScore(reposWithStars);
 
   return {
     userGithubId: userProfile.id.toString(), // Add the userGithubId from the user profile
@@ -586,5 +623,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     prMergeRatio: codeQualityMetrics.prMergeRatio,
     prRevisions: codeQualityMetrics.prRevisions,
     codeQualityScore: codeQualityMetrics.codeQualityScore,
+    
+    // Community Impact metrics
+    starCount: communityImpactMetrics.starCount,
+    communityImpactScore: communityImpactMetrics.communityImpactScore,
   };
 }

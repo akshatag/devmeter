@@ -68,6 +68,9 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       prMergeRatio: metrics.prMergeRatio,
       prRevisions: metrics.prRevisions,
       codeQualityScore: metrics.codeQualityScore,
+      // Community Impact metrics
+      starCount: metrics.starCount,
+      communityImpactScore: metrics.communityImpactScore,
     },
     create: {
       userGithubId,
@@ -98,6 +101,9 @@ export async function storeUserMetrics(userGithubId: string, metrics: UserMetric
       prMergeRatio: metrics.prMergeRatio,
       prRevisions: metrics.prRevisions,
       codeQualityScore: metrics.codeQualityScore,
+      // Community Impact metrics
+      starCount: metrics.starCount,
+      communityImpactScore: metrics.communityImpactScore,
     },
   });
 }

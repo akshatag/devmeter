@@ -44,4 +44,8 @@ export type UserMetricsData = {
   prMergeRatio?: number;
   prRevisions?: number;
   codeQualityScore?: number;
+  
+  // Community Impact metrics
+  starCount?: number;
+  communityImpactScore?: number;
 };
