@@ -341,6 +341,59 @@ function calculateCommunityImpactScore(
   };
 }
 
+/**
+ * Calculate DevMeter score based on individual metrics
+ * 
+ * @param seniorityScore - Seniority score (0-100)
+ * @param versatilityScore - Versatility score (0-100)
+ * @param productivityScore - Productivity score (0-100)
+ * @param codeQualityScore - Code quality score (0-100)
+ * @param communityImpactScore - Community impact score (0-100)
+ * @returns Object containing DevMeter score and tier
+ */
+function calculateDevMeterScore(
+  seniorityScore: number = 0,
+  versatilityScore: number = 0,
+  productivityScore: number = 0,
+  codeQualityScore: number = 0,
+  communityImpactScore: number = 0
+): {
+  devMeterScore: number;
+  devMeterTier: string;
+} {
+  // Calculate weighted score according to the formula:
+  // Seniority/100 * 15 + Productivity/100 * 25 + Code Quality/100 * 30 + Versatility/100 * 20 + Community Impact/100 * 10
+  const weightedScore = 
+    (seniorityScore / 100 * 15) + 
+    (productivityScore / 100 * 25) + 
+    (codeQualityScore / 100 * 30) + 
+    (versatilityScore / 100 * 20) + 
+    (communityImpactScore / 100 * 10);
+  
+  // Round to nearest integer
+  const finalScore = Math.round(weightedScore);
+  
+  // Determine tier based on score ranges
+  let tier = "Amateur";
+  
+  if (finalScore >= 91) {
+    tier = "Cracked";
+  } else if (finalScore >= 81) {
+    tier = "Master";
+  } else if (finalScore >= 61) {
+    tier = "Elite";
+  } else if (finalScore >= 41) {
+    tier = "Adept";
+  } else if (finalScore >= 21) {
+    tier = "Novice";
+  }
+  
+  return {
+    devMeterScore: finalScore,
+    devMeterTier: tier
+  };
+}
+
 export async function GET() {
   try {
     // For demo purposes, we'll use a fixed GitHub username
@@ -595,6 +648,15 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
   
   const communityImpactMetrics = calculateCommunityImpactScore(reposWithStars);
 
+  // Calculate DevMeter score and tier
+  const devMeterMetrics = calculateDevMeterScore(
+    seniorityScore,
+    versatilityMetrics.versatilityScore,
+    productivityMetrics.productivityScore,
+    codeQualityMetrics.codeQualityScore,
+    communityImpactMetrics.communityImpactScore
+  );
+
   return {
     userGithubId: userProfile.id.toString(), // Add the userGithubId from the user profile
     commitFrequency: commitFrequency,
@@ -627,5 +689,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     // Community Impact metrics
     starCount: communityImpactMetrics.starCount,
     communityImpactScore: communityImpactMetrics.communityImpactScore,
+    
+    // DevMeter score and tier
+    devMeterScore: devMeterMetrics.devMeterScore,
+    devMeterTier: devMeterMetrics.devMeterTier,
   };
 }

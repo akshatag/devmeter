@@ -226,38 +226,48 @@ export default function Dashboard() {
           )}
 
           {metricsData && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="h-80">
-                <h3 className="text-lg font-medium mb-4 text-center">Metrics Star Plot</h3>
-                <Radar data={radarData} options={radarOptions} />
+            <>
+              {/* DevMeter Tier Display */}
+              <div className="mb-8 p-6 border-2 border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
+                <h3 className="text-xl font-bold mb-2">DevMeter Tier</h3>
+                <div className="text-4xl font-extrabold text-blue-600 dark:text-blue-300">
+                  {metricsData.devMeterTier || 'Amateur'}
+                </div>
               </div>
               
-              <div>
-                <h3 className="text-lg font-medium mb-4">Metrics Summary</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-md bg-blue-50 dark:bg-blue-900/20">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Seniority</p>
-                    <p className="text-2xl font-bold">{metricsData.seniorityScore?.toFixed(0) || '0'}%</p>
-                  </div>
-                  <div className="p-4 border rounded-md bg-green-50 dark:bg-green-900/20">
-                    <p className="text-sm font-medium text-green-800 dark:text-green-300">Versatility</p>
-                    <p className="text-2xl font-bold">{metricsData.versatilityScore?.toFixed(0) || '0'}%</p>
-                  </div>
-                  <div className="p-4 border rounded-md bg-purple-50 dark:bg-purple-900/20">
-                    <p className="text-sm font-medium text-purple-800 dark:text-purple-300">Productivity</p>
-                    <p className="text-2xl font-bold">{metricsData.productivityScore?.toFixed(0) || '0'}%</p>
-                  </div>
-                  <div className="p-4 border rounded-md bg-amber-50 dark:bg-amber-900/20">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Code Quality</p>
-                    <p className="text-2xl font-bold">{metricsData.codeQualityScore?.toFixed(0) || '0'}%</p>
-                  </div>
-                  <div className="p-4 border rounded-md bg-indigo-50 dark:bg-indigo-900/20 sm:col-span-2">
-                    <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Community Impact</p>
-                    <p className="text-2xl font-bold">{metricsData.communityImpactScore?.toFixed(0) || '0'}%</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="h-80">
+                  <h3 className="text-lg font-medium mb-4 text-center">Metrics Star Plot</h3>
+                  <Radar data={radarData} options={radarOptions} />
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Metrics Summary</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-md bg-blue-50 dark:bg-blue-900/20">
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Seniority</p>
+                      <p className="text-2xl font-bold">{metricsData.seniorityScore?.toFixed(0) || '0'}%</p>
+                    </div>
+                    <div className="p-4 border rounded-md bg-green-50 dark:bg-green-900/20">
+                      <p className="text-sm font-medium text-green-800 dark:text-green-300">Versatility</p>
+                      <p className="text-2xl font-bold">{metricsData.versatilityScore?.toFixed(0) || '0'}%</p>
+                    </div>
+                    <div className="p-4 border rounded-md bg-purple-50 dark:bg-purple-900/20">
+                      <p className="text-sm font-medium text-purple-800 dark:text-purple-300">Productivity</p>
+                      <p className="text-2xl font-bold">{metricsData.productivityScore?.toFixed(0) || '0'}%</p>
+                    </div>
+                    <div className="p-4 border rounded-md bg-amber-50 dark:bg-amber-900/20">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Code Quality</p>
+                      <p className="text-2xl font-bold">{metricsData.codeQualityScore?.toFixed(0) || '0'}%</p>
+                    </div>
+                    <div className="p-4 border rounded-md bg-indigo-50 dark:bg-indigo-900/20 sm:col-span-2">
+                      <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Community Impact</p>
+                      <p className="text-2xl font-bold">{metricsData.communityImpactScore?.toFixed(0) || '0'}%</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 

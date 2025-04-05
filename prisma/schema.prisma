@@ -83,6 +83,10 @@ model UserMetrics {
   starCount                  Int?
   communityImpactScore       Int?
   
+  // DevMeter score and tier
+  devMeterScore              Int?
+  devMeterTier               String?
+  
   // Metadata for calculations
   repositoriesAnalyzed String[]  // Array of repository names that were analyzed
   dateRangeStart      DateTime?

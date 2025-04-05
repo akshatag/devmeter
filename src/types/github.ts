@@ -48,4 +48,8 @@ export type UserMetricsData = {
   // Community Impact metrics
   starCount?: number;
   communityImpactScore?: number;
+  
+  // DevMeter score and tier
+  devMeterScore?: number;
+  devMeterTier?: string;
 };
