@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { GitHubUserData, UserMetricsData } from "@/types/github";
+import { signOut } from "next-auth/react";
 import { Radar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -202,6 +203,13 @@ export default function Dashboard() {
               onClick={() => router.push('/')}
             >
               Home
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border-red-200"
+            >
+              Sign Out
             </Button>
           </div>
         </div>

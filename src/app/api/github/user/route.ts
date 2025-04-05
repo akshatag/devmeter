@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { fetchGitHubUserData } from '../utils';
+import { fetchGitHubUserData, getOctokit } from '../utils';
 import { PrismaClient } from '@prisma/client';
 import { GitHubUserData } from '@/types/github';
+import { auth } from '@/app/api/auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -33,10 +34,24 @@ async function storeUserData(userData: GitHubUserData) {
 
 export async function GET() {
   try {
-    // For demo purposes, we'll use a fixed GitHub username
-    // In a real app, this might come from the authenticated user or a query parameter
-    const username = 'akshatag'; // Example username - replace with your own or make dynamic
-
+    // Get the authenticated user's session
+    const session = await auth();
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Authentication required',
+        },
+        { status: 401 }
+      );
+    }
+    
+    // Get the authenticated user's GitHub username from their session
+    const octokit = await getOctokit();
+    const { data: githubUser } = await octokit.rest.users.getAuthenticated();
+    const username = githubUser.login;
+    
     // Step 1: Fetch user data from GitHub
     const userData = await fetchGitHubUserData(username);
     

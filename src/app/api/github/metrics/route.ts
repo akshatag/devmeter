@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { octokit, graphqlWithAuth, fetchGitHubUserData, storeUserMetrics, UserMetricsData } from '../utils';
+import { getOctokit, getGraphQLClient, fetchGitHubUserData, storeUserMetrics, UserMetricsData } from '../utils';
+import { auth } from '@/app/api/auth/[...nextauth]/route';
 
 // Define type for the GraphQL response
 type GitHubGraphQLResponse = {
@@ -396,9 +397,23 @@ function calculateDevMeterScore(
 
 export async function GET() {
   try {
-    // For demo purposes, we'll use a fixed GitHub username
-    // In a real app, this might come from the authenticated user or a query parameter
-    const username = 'akshatag'; // Example username - replace with your own or make dynamic
+    // Get the authenticated user's session
+    const session = await auth();
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Authentication required',
+        },
+        { status: 401 }
+      );
+    }
+    
+    // Get the authenticated user's GitHub username
+    const octokit = await getOctokit();
+    const { data: githubUser } = await octokit.rest.users.getAuthenticated();
+    const username = githubUser.login;
 
     // Step 1: Fetch user data to get the GitHub ID
     const userData = await fetchGitHubUserData(username);
@@ -428,6 +443,9 @@ export async function GET() {
 }
 
 async function calculateUserMetrics(username: string): Promise<UserMetricsData> {
+  // Get Octokit instance with the authenticated user's token
+  const octokit = await getOctokit();
+  
   // Get user profile to calculate account age
   const { data: userProfile } = await octokit.rest.users.getByUsername({
     username,
@@ -471,6 +489,9 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
     // Using GraphQL to get data for seniority and versatility metrics
     // Calculate date from 1 year ago for the contribution calendar
     const fromDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Get GraphQL client with the authenticated user's token
+    const graphqlWithAuth = await getGraphQLClient();
     
     result = await graphqlWithAuth<GitHubGraphQLResponse>(`
       query ($username: String!, $fromDate: DateTime!) {
@@ -607,6 +628,8 @@ async function calculateUserMetrics(username: string): Promise<UserMetricsData> 
       const firstRepo = repos[0];
       // This is a simplified example - in reality, you'd want to analyze multiple repos
       // and possibly use more detailed API endpoints
+      // Get a fresh Octokit instance with the authenticated user's token
+      const octokit = await getOctokit();
       const { data: commits } = await octokit.rest.repos.listCommits({
         owner: firstRepo.owner.login,
         repo: firstRepo.name,

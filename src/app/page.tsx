@@ -4,37 +4,50 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { AuthButton } from "@/components/auth/auth-button";
+import { UserProfile } from "@/components/auth/user-profile";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [checkingData, setCheckingData] = useState(true);
   const [error, setError] = useState("");
+  const isAuthenticated = status === "authenticated";
   
   // Check if user data already exists on component mount
   useEffect(() => {
     async function checkExistingData() {
-      try {
-        const userResponse = await fetch('/api/github/user');
-        const userData = await userResponse.json();
-        
-        if (userData.success && userData.user) {
-          // User data exists, redirect to dashboard
-          router.push('/dashboard');
+      // Only check for existing data if the user is authenticated
+      if (isAuthenticated) {
+        try {
+          const userResponse = await fetch('/api/github/user');
+          const userData = await userResponse.json();
+          
+          if (userData.success && userData.user) {
+            // User data exists, redirect to dashboard
+            router.push('/dashboard');
+          }
+        } catch (err) {
+          console.error('Error checking existing data:', err);
+          // Don't set error here, just continue to show the landing page
         }
-      } catch (err) {
-        console.error('Error checking existing data:', err);
-        // Don't set error here, just continue to show the landing page
-      } finally {
-        setCheckingData(false);
       }
+      setCheckingData(false);
     }
     
     checkExistingData();
-  }, [router]);
+  }, [router, isAuthenticated]);
   
   // Function to fetch GitHub data from our API endpoints
   async function fetchGitHubData() {
+    // Only proceed if the user is authenticated
+    if (!isAuthenticated) {
+      setError("Please sign in with GitHub first");
+      return;
+    }
+    
     setLoading(true);
     setError("");
     
@@ -102,10 +115,22 @@ export default function Home() {
             />
           </div>
           
+          {/* Show user profile if authenticated */}
+          {isAuthenticated && session?.user && (
+            <div className="mb-6">
+              <UserProfile />
+            </div>
+          )}
+          
+          {/* Sign in button */}
+          <div className="mb-4">
+            <AuthButton />
+          </div>
+          
           <Button 
             className="w-full py-6 text-lg"
             onClick={fetchGitHubData}
-            disabled={loading}
+            disabled={loading || !isAuthenticated}
           >
             {loading ? (
               <span className="flex items-center gap-2">

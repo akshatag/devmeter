@@ -1,25 +1,48 @@
 import { Octokit } from 'octokit';
 import { PrismaClient } from '@prisma/client';
 import { GitHubUserData, UserMetricsData } from '@/types/github';
+import { getGitHubToken } from '@/lib/auth';
 
 // Create shared instances to be reused across API routes
 export const prisma = new PrismaClient();
-export const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
 
-// Export graphql client for direct GraphQL queries
-export const graphqlWithAuth = octokit.graphql.defaults({
-  headers: {
-    authorization: `token ${process.env.GITHUB_TOKEN}`,
-  },
-});
+/**
+ * Create an Octokit instance with the authenticated user's token
+ * Falls back to the environment token if no user token is available
+ */
+export async function getOctokit() {
+  // Try to get the authenticated user's token first
+  const authToken = await getGitHubToken();
+  
+  return new Octokit({
+    auth: authToken || process.env.GITHUB_TOKEN,
+  });
+}
+
+/**
+ * Create a GraphQL client with the authenticated user's token
+ * Falls back to the environment token if no user token is available
+ */
+export async function getGraphQLClient() {
+  const authToken = await getGitHubToken();
+  const token = authToken || process.env.GITHUB_TOKEN;
+  
+  const octokit = await getOctokit();
+  return octokit.graphql.defaults({
+    headers: {
+      authorization: `token ${token}`,
+    },
+  });
+}
 
 // Re-export types for convenience
 export type { GitHubUserData, UserMetricsData };
 
 // Shared utility functions
 export async function fetchGitHubUserData(username: string): Promise<GitHubUserData> {
+  // Get Octokit instance with the authenticated user's token
+  const octokit = await getOctokit();
+  
   // Fetch basic user profile from GitHub
   const { data: user } = await octokit.rest.users.getByUsername({
     username,
