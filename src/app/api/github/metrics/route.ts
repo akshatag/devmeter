@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getOctokit, getGraphQLClient, fetchGitHubUserData, storeUserMetrics, UserMetricsData } from '../utils';
 import { auth } from '@/lib/auth';
 
-// Define type for the GraphQL response
+// Define type for the GraphQL responses
 type GitHubGraphQLResponse = {
   pullRequests: {
     issueCount: number;
