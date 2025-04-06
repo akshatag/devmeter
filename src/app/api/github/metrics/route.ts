@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getOctokit, getGraphQLClient, fetchGitHubUserData, storeUserMetrics, UserMetricsData } from '../utils';
-import { auth } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 
 // Define type for the GraphQL response
 type GitHubGraphQLResponse = {

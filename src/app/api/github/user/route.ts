@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { fetchGitHubUserData, getOctokit } from '../utils';
 import { PrismaClient } from '@prisma/client';
 import { GitHubUserData } from '@/types/github';
-import { auth } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
